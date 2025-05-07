@@ -15,7 +15,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                    def dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    echo "Docker image built: ${dockerImage.id}"
                 }
             }
         }
@@ -24,8 +26,9 @@ pipeline {
                 script {
                     echo "Logging into Docker Hub"
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        echo "Pushing image ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                        echo "Pushing image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                         docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push()
+                        echo "Pushing image: ${DOCKER_IMAGE}:latest"
                         docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push('latest')
                     }
                 }
@@ -35,13 +38,13 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Ensure Minikube is running on the host
+                        echo "Starting Minikube"
                         bat 'minikube start --driver=docker || exit 0'
-                        // Apply Kubernetes manifests
+                        echo "Applying Kubernetes manifests"
                         bat "kubectl apply -f deployment.yaml --kubeconfig=%KUBECONFIG%"
-                        // Expose the service and capture URL
+                        echo "Exposing service"
                         bat "minikube service mitra-techday-website-service --url > service-url.txt"
-                        // Display the service URL
+                        echo "Service URL:"
                         bat "type service-url.txt"
                     } catch (Exception e) {
                         echo "Deployment failed: ${e}"
