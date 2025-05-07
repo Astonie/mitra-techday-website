@@ -16,8 +16,8 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    def dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                    echo "Docker image built: ${dockerImage.id}"
+                    bat "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
+                    echo "Docker image built"
                 }
             }
         }
@@ -25,12 +25,14 @@ pipeline {
             steps {
                 script {
                     echo "Logging into Docker Hub"
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        echo "Pushing image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push()
-                        echo "Pushing image: ${DOCKER_IMAGE}:latest"
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push('latest')
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
                     }
+                    echo "Pushing image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                    bat "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                    echo "Pushing image: ${DOCKER_IMAGE}:latest"
+                    bat "docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
+                    bat "docker push ${DOCKER_IMAGE}:latest"
                 }
             }
         }
