@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Docker Hub credentials ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub') // Docker Hub credentials ID
         DOCKER_IMAGE = "mukiwa/mitra-techday-website:latest"
         GIT_REPO = 'https://github.com/Astonie/mitra-techday-website.git'
         KUBECONFIG = '/var/jenkins_home/.kube/config'
