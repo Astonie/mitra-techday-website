@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mitra-techday-website
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mitra-techday-website
+  template:
+    metadata:
+      labels:
+        app: mitra-techday-website
+    spec:
+      containers:
+      - name: mitra-techday-website
+        image: mukiwa/mitra-techday-website:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mitra-techday-website-service
+  labels:
+    app: mitra-techday-website
+spec:
+  selector:
+    app: mitra-techday-website
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
