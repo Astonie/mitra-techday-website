@@ -8,12 +8,6 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repo') {
-            steps {
-                git credentialsId: 'github-creds', url: "${GITHUB_REPO}"
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
