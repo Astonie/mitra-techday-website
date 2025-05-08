@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                // Pull the code from GitHub using the scm
+                // This ensures that the Git repository is cloned first
                 checkout scm
             }
         }
