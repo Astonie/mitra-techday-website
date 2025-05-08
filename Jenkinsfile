@@ -11,7 +11,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    bat "docker build -t ${IMAGE_NAME} ."
+                    sh "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
@@ -19,7 +19,7 @@ pipeline {
         stage('Stop Old Container') {
             steps {
                 script {
-                    bat "docker rm -f ${CONTAINER_NAME} || echo 'No container to remove'"
+                    sh "docker rm -f ${CONTAINER_NAME} || echo 'No container to remove'"
                 }
             }
         }
@@ -27,7 +27,7 @@ pipeline {
         stage('Run New Container') {
             steps {
                 script {
-                    bat "docker run -d --name ${CONTAINER_NAME} -p 8081:80 ${IMAGE_NAME}"
+                    sh "docker run -d --name ${CONTAINER_NAME} -p 8081:80 ${IMAGE_NAME}"
                 }
             }
         }
