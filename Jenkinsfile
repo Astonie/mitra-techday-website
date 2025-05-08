@@ -4,9 +4,16 @@ pipeline {
     environment {
         IMAGE_NAME = "mitra-techday:latest"
         CONTAINER_NAME = "mitra-techday"
+        GITHUB_REPO = "https://github.com/Astonie/mitra-techday-website.git"
     }
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm  // This ensures Jenkins pulls the latest code from GitHub
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 echo "🔨 Building Docker image..."
