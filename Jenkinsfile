@@ -1,65 +1,40 @@
 pipeline {
     agent any
+
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Docker Hub credentials ID
-        DOCKER_IMAGE = "mukiwa/mitra-techday-website" // Docker Hub image name
-        GIT_REPO = 'https://github.com/Astonie/mitra-techday-website.git'
-        KUBECONFIG = 'C:\\jenkins_home\\.kube\\config' // Windows path to kubeconfig
+        IMAGE_NAME = "mitra-techday:latest"
+        CONTAINER_NAME = "mitra-techday"
+        GITHUB_REPO = "https://github.com/Astonie/mitra-techday-website.git"
     }
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repo') {
             steps {
-                git branch: 'main', url: "${GIT_REPO}", credentialsId: 'github'
+                git credentialsId: 'github-creds', url: "${GITHUB_REPO}"
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    bat "docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ."
-                    echo "Docker image built"
+                    bat "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
-        stage('Push to Docker Hub') {
+
+        stage('Stop Old Container') {
             steps {
                 script {
-                    echo "Logging into Docker Hub"
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
-                    }
-                    echo "Pushing image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    bat "docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    echo "Pushing image: ${DOCKER_IMAGE}:latest"
-                    bat "docker tag ${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
-                    bat "docker push ${DOCKER_IMAGE}:latest"
+                    bat "docker rm -f ${CONTAINER_NAME} || echo 'No container to remove'"
                 }
             }
         }
-        stage('Deploy to Minikube') {
+
+        stage('Run New Container') {
             steps {
                 script {
-                    try {
-                        echo "Starting Minikube"
-                        bat 'minikube start --driver=docker || exit 0'
-                        echo "Applying Kubernetes manifests"
-                        bat "kubectl apply -f deployment.yaml --kubeconfig=%KUBECONFIG%"
-                        echo "Exposing service"
-                        bat "minikube service mitra-techday-website-service --url > service-url.txt"
-                        echo "Service URL:"
-                        bat "type service-url.txt"
-                    } catch (Exception e) {
-                        echo "Deployment failed: ${e}"
-                        throw e
-                    }
+                    bat "docker run -d --name ${CONTAINER_NAME} -p 8081:80 ${IMAGE_NAME}"
                 }
-            }
-        }
-    }
-    post {
-        always {
-            node('') { // Ensure cleanWs runs in a node context
-                cleanWs()
             }
         }
     }
