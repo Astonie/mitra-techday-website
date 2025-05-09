@@ -1,18 +1,17 @@
 pipeline {
-    agent any
+    agent { label 'docker' }
 
     environment {
         IMAGE_NAME = "mitra-techday:latest"
         GITHUB_REPO = "https://github.com/Astonie/mitra-techday-website.git"
         DEPLOYMENT_NAME = "mitra-techday-deployment"
         SERVICE_NAME = "mitra-techday-service"
-        K8S_MANIFEST_PATH = "k8s/deployment.yaml" 
+        K8S_MANIFEST_PATH = "deployment.yaml"
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
-                // Ensure Git repo is cloned
                 checkout scm
             }
         }
@@ -20,7 +19,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'eval $(minikube docker-env)'
                     sh "docker build -t ${IMAGE_NAME} ."
                 }
             }
@@ -29,7 +27,6 @@ pipeline {
         stage('Deploy to Minikube') {
             steps {
                 script {
-                    // Apply K8s deployment and service from manifest
                     sh "kubectl apply -f ${K8S_MANIFEST_PATH}"
                 }
             }
