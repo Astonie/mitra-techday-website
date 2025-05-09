@@ -1,4 +1,8 @@
+# Use a lightweight Nginx base image
 FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/
+
+# Copy index.html to the nginx HTML directory
+COPY index.html /usr/share/nginx/html/index.html
+
+# Expose port 80
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
