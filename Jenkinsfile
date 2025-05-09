@@ -3,14 +3,16 @@ pipeline {
 
     environment {
         IMAGE_NAME = "mitra-techday:latest"
-        CONTAINER_NAME = "mitra-techday"
         GITHUB_REPO = "https://github.com/Astonie/mitra-techday-website.git"
+        DEPLOYMENT_NAME = "mitra-techday-deployment"
+        SERVICE_NAME = "mitra-techday-service"
+        K8S_MANIFEST_PATH = "k8s/deployment.yaml" // Adjust if needed
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
-                // This ensures that the Git repository is cloned first
+                // Ensure Git repo is cloned
                 checkout scm
             }
         }
@@ -18,25 +20,41 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    sh 'eval $(minikube docker-env)'
                     sh "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Deploy to Minikube') {
             steps {
                 script {
-                    sh "docker rm -f ${CONTAINER_NAME} || echo 'No container to remove'"
+                    // Apply K8s deployment and service from manifest
+                    sh "kubectl apply -f ${K8S_MANIFEST_PATH}"
                 }
             }
         }
 
-        stage('Run New Container') {
+        stage('Verify Deployment') {
             steps {
                 script {
-                    sh "docker run -d --name ${CONTAINER_NAME} -p 8081:80 ${IMAGE_NAME}"
+                    sh "kubectl rollout status deployment/${DEPLOYMENT_NAME}"
+                    sh "kubectl get pods"
+                    sh "minikube service ${SERVICE_NAME} --url"
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up...'
+        }
+        success {
+            echo 'Deployed successfully to Minikube!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
