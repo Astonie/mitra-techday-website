@@ -6,7 +6,7 @@ pipeline {
         GITHUB_REPO = "https://github.com/Astonie/mitra-techday-website.git"
         DEPLOYMENT_NAME = "mitra-techday-deployment"
         SERVICE_NAME = "mitra-techday-service"
-        K8S_MANIFEST_PATH = "k8s/deployment.yaml" // Adjust if needed
+        K8S_MANIFEST_PATH = "k8s/deployment.yaml" 
     }
 
     stages {
